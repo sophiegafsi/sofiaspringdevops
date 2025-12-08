@@ -1,20 +1,30 @@
-# Stage 1: build the app
-FROM maven:3.8.8-openjdk-17 AS build
+# Use Maven to build the project
+FROM maven:3.9.3-eclipse-temurin-17 AS build
+
+# Set working directory inside container
 WORKDIR /app
-# Copy sources and build
+
+# Copy pom.xml and download dependencies first (for caching)
 COPY pom.xml .
+RUN mvn dependency:go-offline
+
+# Copy the source code
 COPY src ./src
-# Skip tests to speed up build (optionnel)
-RUN mvn -B clean package -DskipTests
 
-# Stage 2: runtime image
-FROM eclipse-temurin:17-jre-jammy
+# Build the jar (skip tests if you want faster build)
+RUN mvn clean package -DskipTests
+
+# Use a lightweight Java runtime image
+FROM eclipse-temurin:17-jdk-alpine
+
+# Set working directory
 WORKDIR /app
-# Copy jar from build stage (assumes final artifact is target/*.jar)
-COPY --from=build /app/target/*.jar app.jar
 
-# Expose port (change si nécessaire)
-EXPOSE 8080
+# Copy the jar from the build stage
+COPY --from=build /app/target/gestion-station-skii-0.0.1-SNAPSHOT.jar app.jar
 
-# Run the jar
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+# Expose port
+EXPOSE 8087
+
+# Run the application
+ENTRYPOINT ["java","-jar","app.jar"]
