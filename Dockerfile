@@ -18,7 +18,6 @@ RUN mvn clean package -DskipTests
 # Use a lightweight Java runtime image
 FROM eclipse-temurin:17-jdk-alpine
 
-COPY settings.xml /root/.m2/settings.xml
 
 
 # Set working directory
